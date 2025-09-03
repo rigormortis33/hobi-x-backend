@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hobi-X Anagram Oyunu - Önizleme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+        
+        .difficulty-selector {
+            margin-bottom: 30px;
+        }
+        
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .difficulty-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .scrambled-word {
+            font-size: 3em;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            color: #ffd700;
+        }
+        
+        .hint {
+            font-size: 1.2em;
+            margin: 15px 0;
+            font-style: italic;
+            opacity: 0.9;
+        }
+        
+        .category {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin: 15px 0;
+            text-transform: uppercase;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-new {
+            background: linear-gradient(45deg, #007bff, #6610f2);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .correct {
+            background: rgba(40, 167, 69, 0.3);
+            border: 2px solid #28a745;
+        }
+        
+        .incorrect {
+            background: rgba(220, 53, 69, 0.3);
+            border: 2px solid #dc3545;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">🎯 Anagram</h1>
+        <p class="subtitle">Harfleri doğru sıraya diz!</p>
+        
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" data-difficulty="easy">Kolay</button>
+            <button class="difficulty-btn" data-difficulty="medium">Orta</button>
+            <button class="difficulty-btn" data-difficulty="hard">Zor</button>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="scrambled-word" id="scrambledWord">...</div>
+            <div class="category" id="category">Kategori</div>
+            <div class="hint" id="hint">İpucu yükleniyor...</div>
+            
+            <input type="text" class="answer-input" id="answerInput" 
+                   placeholder="Cevabını buraya yaz..." 
+                   autocomplete="off">
+            
+            <div>
+                <button class="btn" onclick="checkAnswer()">✓ Kontrol Et</button>
+                <button class="btn btn-new" onclick="newWord()">🔄 Yeni Kelime</button>
+            </div>
+            
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="scoreValue">0</div>
+                <div class="stat-label">Puan</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="correctValue">0</div>
+                <div class="stat-label">Doğru</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalValue">0</div>
+                <div class="stat-label">Toplam</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        let currentWord = null;
+        let currentDifficulty = 'easy';
+        let stats = { score: 0, correct: 0, total: 0 };
+        let startTime = null;
+
+        // Zorluk seviyesi seçici
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelector('.difficulty-btn.active').classList.remove('active');
+                btn.classList.add('active');
+                currentDifficulty = btn.dataset.difficulty;
+                newWord();
+            });
+        });
+
+        // Enter tuşu ile cevap kontrolü
+        document.getElementById('answerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // Yeni kelime getir
+        async function newWord() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.classList.add('loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/games/anagram/word?difficulty=${currentDifficulty}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentWord = data.data;
+                    startTime = Date.now();
+                    
+                    document.getElementById('scrambledWord').textContent = currentWord.scrambledWord;
+                    document.getElementById('category').textContent = currentWord.category.toUpperCase();
+                    document.getElementById('hint').textContent = `💡 ${currentWord.hint}`;
+                    document.getElementById('answerInput').value = '';
+                    document.getElementById('result').style.display = 'none';
+                    
+                    gameArea.classList.remove('loading');
+                    document.getElementById('answerInput').focus();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Kelime getirme hatası:', error);
+                document.getElementById('scrambledWord').textContent = 'HATA';
+                document.getElementById('hint').textContent = 'API bağlantısı kurulamadı. Sunucunun çalıştığından emin olun.';
+                gameArea.classList.remove('loading');
+            }
+        }
+
+        // Cevabı kontrol et
+        async function checkAnswer() {
+            const userAnswer = document.getElementById('answerInput').value.trim();
+            if (!userAnswer || !currentWord) return;
+
+            const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/games/anagram/check`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        wordId: currentWord.id,
+                        userAnswer: userAnswer,
+                        timeSpent: timeSpent
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    const resultDiv = document.getElementById('result');
+                    
+                    stats.total++;
+                    
+                    if (result.isCorrect) {
+                        stats.correct++;
+                        stats.score += result.score;
+                        
+                        resultDiv.className = 'result correct';
+                        resultDiv.innerHTML = `
+                            <div>🎉 Doğru!</div>
+                            <div>+${result.score} puan (${timeSpent}s)</div>
+                        `;
+                    } else {
+                        resultDiv.className = 'result incorrect';
+                        resultDiv.innerHTML = `
+                            <div>❌ Yanlış!</div>
+                            <div>Doğru cevap: <strong>${result.correctAnswer}</strong></div>
+                        `;
+                    }
+                    
+                    resultDiv.style.display = 'block';
+                    updateStats();
+                    
+                    // 2 saniye sonra yeni kelime
+                    setTimeout(() => {
+                        newWord();
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Cevap kontrolü hatası:', error);
+            }
+        }
+
+        // İstatistikleri güncelle
+        function updateStats() {
+            document.getElementById('scoreValue').textContent = stats.score;
+            document.getElementById('correctValue').textContent = stats.correct;
+            document.getElementById('totalValue').textContent = stats.total;
+        }
+
+        // Sayfa yüklendiğinde ilk kelimeyi getir
+        window.addEventListener('load', () => {
+            newWord();
+        });
+    </script>
+</body>
+</html>
